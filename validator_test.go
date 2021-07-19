@@ -31,4 +31,12 @@ func TestValidator(t *testing.T) {
 	result = v.Validate(a)
 	assert.Equal(t, true, result.Ok())
 	assert.Equal(t, nil, result.Error())
+
+	v2 := New()
+	a.Name = ""
+	err = v2.Struct(a)
+	if err != nil {
+		t.Log(err)
+	}
+	assert.Equal(t, `Name为必填字段`, err.Error())
 }

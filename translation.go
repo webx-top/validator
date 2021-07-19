@@ -1,8 +1,6 @@
 package validator
 
 import (
-	"sync"
-
 	"github.com/go-playground/locales"
 	locale_en "github.com/go-playground/locales/en"
 	locale_enUS "github.com/go-playground/locales/en_US"
@@ -49,23 +47,9 @@ func RegisterTranslation(translator locales.Translator, register TranslationRegi
 	}
 }
 
-var (
-	universalTranslator *ut.UniversalTranslator
-	utOnce              sync.Once
-)
-
-func initUniversalTranslator() {
-	fallback := SupportedLocales[0]
-	universalTranslator = ut.New(fallback, SupportedLocales...)
-}
-
 func UniversalTranslator() *ut.UniversalTranslator {
-	utOnce.Do(initUniversalTranslator)
-	return universalTranslator
-}
-
-func UniversalTranslatorReset() {
-	utOnce = sync.Once{}
+	fallback := SupportedLocales[0]
+	return ut.New(fallback, SupportedLocales...)
 }
 
 // RegisterTranslation 添加额外翻译
