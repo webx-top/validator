@@ -124,7 +124,7 @@ func (v *Validate) Validate(i interface{}, args ...string) echo.ValidateResult {
 		if err != nil {
 			vErrors := err.(validator.ValidationErrors)
 			e.SetField(vErrors[0].Field())
-			e.SetRaw(vErrors[0])
+			e.SetRaw(vErrors)
 			return e.SetError(v.Error(vErrors[0]))
 		}
 	}
