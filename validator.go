@@ -38,8 +38,8 @@ func New(locales ...string) *Validate {
 	if ok {
 		transtation(validate, translator)
 	}
-	for tag, cfg := range CustomValidations {
-		validate.RegisterValidation(tag, cfg.Func, cfg.CallIfNull)
+	for _, cfg := range CustomValidations {
+		cfg.Register(validate, translator, locale)
 	}
 	return &Validate{
 		validator:  validate,
