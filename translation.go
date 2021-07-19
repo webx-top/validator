@@ -1,0 +1,79 @@
+package validator
+
+import (
+	"sync"
+
+	"github.com/go-playground/locales"
+	locale_en "github.com/go-playground/locales/en"
+	locale_enUS "github.com/go-playground/locales/en_US"
+	locale_fr "github.com/go-playground/locales/fr"
+	locale_jaJP "github.com/go-playground/locales/ja_JP"
+	locale_ru "github.com/go-playground/locales/ru"
+	locale_zh "github.com/go-playground/locales/zh"
+	ut "github.com/go-playground/universal-translator"
+
+	// RegisterTranslation
+	"github.com/go-playground/validator/v10"
+	translation_en "github.com/go-playground/validator/v10/translations/en"
+	translation_fr "github.com/go-playground/validator/v10/translations/fr"
+	translation_ja "github.com/go-playground/validator/v10/translations/ja"
+	translation_ru "github.com/go-playground/validator/v10/translations/ru"
+	translation_zh "github.com/go-playground/validator/v10/translations/zh"
+)
+
+var SupportedLocales []locales.Translator = []locales.Translator{
+	locale_zh.New(),
+	locale_en.New(),
+	locale_enUS.New(),
+	locale_fr.New(),
+	locale_ru.New(),
+	locale_jaJP.New(),
+}
+
+type TranslationRegister func(v *validator.Validate, trans ut.Translator) (err error)
+
+var Translations = map[string]TranslationRegister{
+	`zh`: translation_zh.RegisterDefaultTranslations,
+	`ru`: translation_ru.RegisterDefaultTranslations,
+	`ja`: translation_ja.RegisterDefaultTranslations,
+	`en`: translation_en.RegisterDefaultTranslations,
+	`fr`: translation_fr.RegisterDefaultTranslations,
+}
+
+func RegisterTranslation(translator locales.Translator, register TranslationRegister, locales ...string) {
+	SupportedLocales = append(SupportedLocales, translator)
+	if len(locales) > 0 {
+		Translations[locales[0]] = register
+	} else {
+		Translations[translator.Locale()] = register
+	}
+}
+
+var (
+	universalTranslator *ut.UniversalTranslator
+	utOnce              sync.Once
+)
+
+func initUniversalTranslator() {
+	fallback := SupportedLocales[0]
+	universalTranslator = ut.New(fallback, SupportedLocales...)
+}
+
+func UniversalTranslator() *ut.UniversalTranslator {
+	utOnce.Do(initUniversalTranslator)
+	return universalTranslator
+}
+
+func UniversalTranslatorReset() {
+	utOnce = sync.Once{}
+}
+
+// RegisterTranslation 添加额外翻译
+// func (v *Validate) RegisterTranslation() error {
+// 	return v.validator.RegisterTranslation("required_without", trans, func(ut ut.Translator) error {
+// 		return ut.Add("required_without", "{0} 为必填字段!", true)
+// 	}, func(ut ut.Translator, fe validator.FieldError) string {
+// 		t, _ := ut.T("required_without", fe.Field())
+// 		return t
+// 	})
+// }
