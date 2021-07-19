@@ -41,7 +41,7 @@ func OptTranslation(locale string, translation *Translation) CustomValidationOpt
 	}
 }
 
-func OptTranslations(locale string, translations map[string]*Translation) CustomValidationOption {
+func OptTranslations(translations map[string]*Translation) CustomValidationOption {
 	return func(c *CustomValidation) {
 		c.Translations = translations
 	}
