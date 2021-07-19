@@ -2,6 +2,7 @@ package validator
 
 import (
 	"log"
+	"strings"
 
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -55,6 +56,9 @@ type Translation struct {
 func (v *CustomValidation) Register(validate *validator.Validate, translator ut.Translator, locale string) {
 	validate.RegisterValidation(v.Tag, v.Func, v.CallIfNull)
 	translation, ok := v.Translations[locale]
+	if !ok {
+		translation, ok = v.Translations[strings.SplitN(locale, `_`, 2)[0]]
+	}
 	if ok {
 		validate.RegisterTranslation(v.Tag, translator, func(translator ut.Translator) error {
 			return translator.Add(v.Tag, translation.Text, translation.Override)
