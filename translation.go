@@ -53,11 +53,6 @@ func UniversalTranslator() *ut.UniversalTranslator {
 }
 
 // RegisterTranslation 添加额外翻译
-// func (v *Validate) RegisterTranslation() error {
-// 	return v.validator.RegisterTranslation("required_without", trans, func(ut ut.Translator) error {
-// 		return ut.Add("required_without", "{0} 为必填字段!", true)
-// 	}, func(ut ut.Translator, fe validator.FieldError) string {
-// 		t, _ := ut.T("required_without", fe.Field())
-// 		return t
-// 	})
-// }
+func (v *Validate) RegisterTranslation(tag string, trans ut.Translator, registerFn validator.RegisterTranslationsFunc, translationFn validator.TranslationFunc) error {
+	return v.validator.RegisterTranslation(tag, trans, registerFn, translationFn)
+}

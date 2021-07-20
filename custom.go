@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func NewCustomValidation(tag string, fn validator.Func, options ...CustomValidationOption) *CustomValidation {
+func NewCustomValidation(tag string, fn validator.FuncCtx, options ...CustomValidationOption) *CustomValidation {
 	c := &CustomValidation{
 		Tag:          tag,
 		Func:         fn,
@@ -23,7 +23,7 @@ func NewCustomValidation(tag string, fn validator.Func, options ...CustomValidat
 
 type CustomValidation struct {
 	Tag          string
-	Func         validator.Func
+	Func         validator.FuncCtx
 	CallIfNull   bool
 	Translations map[string]*Translation
 }
@@ -53,8 +53,8 @@ type Translation struct {
 	Override bool
 }
 
-func (v *CustomValidation) Register(validate *validator.Validate, translator ut.Translator, locale string) {
-	validate.RegisterValidation(v.Tag, v.Func, v.CallIfNull)
+func (v *CustomValidation) Register(validate *Validate, translator ut.Translator, locale string) {
+	validate.validator.RegisterValidationCtx(v.Tag, v.Func, v.CallIfNull)
 	translation, ok := v.Translations[locale]
 	if !ok {
 		translation, ok = v.Translations[strings.SplitN(locale, `_`, 2)[0]]
@@ -75,6 +75,6 @@ func (v *CustomValidation) Register(validate *validator.Validate, translator ut.
 
 var CustomValidations = map[string]*CustomValidation{}
 
-func RegisterCustomValidation(tag string, fn validator.Func, options ...CustomValidationOption) {
+func RegisterCustomValidation(tag string, fn validator.FuncCtx, options ...CustomValidationOption) {
 	CustomValidations[tag] = NewCustomValidation(tag, fn, options...)
 }

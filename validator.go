@@ -16,7 +16,7 @@ func NormalizeLocale(locale string) string {
 	return strings.Replace(locale, `-`, `_`, -1)
 }
 
-func New(locales ...string) *Validate {
+func New(ctx echo.Context, locales ...string) *Validate {
 	var locale string
 	if len(locales) > 0 {
 		locale = locales[0]
@@ -38,57 +38,64 @@ func New(locales ...string) *Validate {
 	if ok {
 		transtation(validate, translator)
 	}
-	for _, cfg := range CustomValidations {
-		cfg.Register(validate, translator, locale)
-	}
-	return &Validate{
+	v := &Validate{
 		validator:  validate,
 		translator: translator,
+		context:    ctx,
 	}
+	for _, cfg := range CustomValidations {
+		cfg.Register(v, translator, locale)
+	}
+	return v
 }
 
 type Validate struct {
 	validator  *validator.Validate
 	translator ut.Translator
+	context    echo.Context
 }
 
 func (v *Validate) Object() *validator.Validate {
 	return v.validator
 }
 
+func (v *Validate) Context() echo.Context {
+	return v.context
+}
+
 // ValidateMap validates map data form a map of tags
 func (v *Validate) ValidateMap(data map[string]interface{}, rules map[string]interface{}) map[string]interface{} {
-	return v.validator.ValidateMap(data, rules)
+	return v.validator.ValidateMapCtx(v.context, data, rules)
 }
 
 // Struct 接收的参数为一个struct
 func (v *Validate) Struct(i interface{}) error {
-	return v.Error(v.validator.Struct(i))
+	return v.Error(v.validator.StructCtx(v.context, i))
 }
 
 // StructExcept 校验struct中的选项，不过除了fields里所给的字段
 func (v *Validate) StructExcept(s interface{}, fields ...string) error {
-	return v.Error(v.validator.StructExcept(s))
+	return v.Error(v.validator.StructExceptCtx(v.context, s))
 }
 
 // StructFiltered 接收一个struct和一个函数，这个函数的返回值为bool，决定是否跳过该选项
 func (v *Validate) StructFiltered(s interface{}, fn validator.FilterFunc) error {
-	return v.Error(v.validator.StructFiltered(s, fn))
+	return v.Error(v.validator.StructFilteredCtx(v.context, s, fn))
 }
 
 // StructPartial 接收一个struct和fields，仅校验在fields里的值
 func (v *Validate) StructPartial(s interface{}, fields ...string) error {
-	return v.Error(v.validator.StructPartial(s, fields...))
+	return v.Error(v.validator.StructPartialCtx(v.context, s, fields...))
 }
 
 // Var 接收一个变量和一个tag的值，比如 validate.Var(i, "gt=1,lt=10")
 func (v *Validate) Var(field interface{}, tag string) error {
-	return v.Error(v.validator.Var(field, tag))
+	return v.Error(v.validator.VarCtx(v.context, field, tag))
 }
 
 // VarWithValue 将两个变量进行对比，比如 validate.VarWithValue(s1, s2, "eqcsfield")
 func (v *Validate) VarWithValue(field interface{}, other interface{}, tag string) error {
-	return v.Error(v.validator.VarWithValue(field, other, tag))
+	return v.Error(v.validator.VarWithValueCtx(v.context, field, other, tag))
 }
 
 // Validate 此处支持两种用法：
@@ -112,7 +119,7 @@ func (v *Validate) Validate(i interface{}, args ...string) echo.ValidateResult {
 		if len(rule) == 0 {
 			return e
 		}
-		err = v.validator.Var(value, rule)
+		err = v.validator.VarCtx(v.context, value, rule)
 		if err != nil {
 			e.SetField(field)
 			e.SetRaw(err)
@@ -120,9 +127,9 @@ func (v *Validate) Validate(i interface{}, args ...string) echo.ValidateResult {
 		}
 	default:
 		if len(args) > 0 {
-			err = v.validator.StructPartial(i, args...)
+			err = v.validator.StructPartialCtx(v.context, i, args...)
 		} else {
-			err = v.validator.Struct(i)
+			err = v.validator.StructCtx(v.context, i)
 		}
 		if err != nil {
 			vErrors := err.(validator.ValidationErrors)

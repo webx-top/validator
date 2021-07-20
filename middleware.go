@@ -14,7 +14,7 @@ func Middleware(skipper ...echo.Skipper) echo.MiddlewareFunc {
 			if skip(c) {
 				return h.Handle(c)
 			}
-			v := New(c.Lang().Format(true, `_`))
+			v := New(c, c.Lang().Format(true, `_`))
 			c.Internal().Set(`validator`, v)
 			c.SetValidator(v)
 			return h.Handle(c)
