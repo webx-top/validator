@@ -2,6 +2,7 @@ package validator
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/admpub/log"
@@ -102,16 +103,17 @@ func (v *Validate) VarWithValue(field interface{}, other interface{}, tag string
 // 1. Validate(表单字段名, 表单值, 验证规则名)
 // 2. Validate(结构体实例, 要验证的结构体字段1，要验证的结构体字段2)
 // Validate(结构体实例) 代表验证所有带“valid”标签的字段
-func (v *Validate) Validate(i interface{}, args ...string) echo.ValidateResult {
+func (v *Validate) Validate(i interface{}, args ...interface{}) echo.ValidateResult {
 	e := echo.NewValidateResult()
 	var err error
 	switch m := i.(type) {
 	case string:
 		field := m
-		var value, rule string
+		var value interface{}
+		var rule string
 		switch len(args) {
 		case 2:
-			rule = args[1]
+			rule = fmt.Sprint(args[1])
 			fallthrough
 		case 1:
 			value = args[0]
@@ -127,7 +129,15 @@ func (v *Validate) Validate(i interface{}, args ...string) echo.ValidateResult {
 		}
 	default:
 		if len(args) > 0 {
-			err = v.validator.StructPartialCtx(v.context, i, args...)
+			fields := make([]string, 0, len(args))
+			for _, v := range args {
+				s, y := v.(string)
+				if !y || len(s) == 0 {
+					continue
+				}
+				fields = append(fields, s)
+			}
+			err = v.validator.StructPartialCtx(v.context, i, fields...)
 		} else {
 			err = v.validator.StructCtx(v.context, i)
 		}
