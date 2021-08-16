@@ -129,15 +129,7 @@ func (v *Validate) Validate(i interface{}, args ...interface{}) echo.ValidateRes
 		}
 	default:
 		if len(args) > 0 {
-			fields := make([]string, 0, len(args))
-			for _, v := range args {
-				s, y := v.(string)
-				if !y || len(s) == 0 {
-					continue
-				}
-				fields = append(fields, s)
-			}
-			err = v.validator.StructPartialCtx(v.context, i, fields...)
+			err = v.validator.StructPartialCtx(v.context, i, echo.InterfacesToStrings(args)...)
 		} else {
 			err = v.validator.StructCtx(v.context, i)
 		}
