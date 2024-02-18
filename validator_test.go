@@ -30,12 +30,12 @@ func TestValidator(t *testing.T) {
 	a.Name = "test"
 	result := v.Validate(a)
 	assert.Equal(t, false, result.Ok())
-	assert.Equal(t, `Age最小只能为18`, result.Error().Error())
+	assert.Equal(t, `Age最小只能为18`, result.Error())
 
 	a.Age = 20
 	result = v.Validate(a)
 	assert.Equal(t, true, result.Ok())
-	assert.Equal(t, nil, result.Error())
+	assert.Equal(t, nil, result.AsError())
 
 	v2 := New(ctx)
 	a.Name = ""
@@ -75,10 +75,10 @@ func TestCustomValidator(t *testing.T) {
 	a.Name = "test2"
 	result := v.Validate(a)
 	assert.Equal(t, false, result.Ok())
-	assert.Equal(t, `输入的名称无效`, result.Error().Error())
+	assert.Equal(t, `输入的名称无效`, result.Error())
 
 	a.Name = "test"
 	result = v.Validate(a)
 	assert.Equal(t, false, result.Ok())
-	assert.Equal(t, `Age最小只能为18`, result.Error().Error())
+	assert.Equal(t, `Age最小只能为18`, result.Error())
 }
