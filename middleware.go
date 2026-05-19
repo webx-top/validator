@@ -24,7 +24,7 @@ func Middleware(skipper ...echo.Skipper) echo.MiddlewareFunc {
 				return h.Handle(c)
 			}
 			locale := c.Lang().Format(true, `_`)
-			v := getCachedValidator(c, locale)
+			v := GetCachedValidator(c, locale)
 			c.Internal().Set(`validator`, v)
 			c.SetValidator(v)
 			return h.Handle(c)
@@ -32,7 +32,10 @@ func Middleware(skipper ...echo.Skipper) echo.MiddlewareFunc {
 	}
 }
 
-func getCachedValidator(c echo.Context, locale string) *Validate {
+func GetCachedValidator(c echo.Context, locale string) *Validate {
+	var transtation TranslationRegister
+	transtation, locale = getTranslationRegister(locale)
+
 	validatorsMu.RLock()
 	v, ok := cachedValidators[locale]
 	validatorsMu.RUnlock()
@@ -47,7 +50,7 @@ func getCachedValidator(c echo.Context, locale string) *Validate {
 		return v
 	}
 
-	v = New(c, locale)
+	v = newWithTranslationRegister(c, transtation, locale)
 	cachedValidators[locale] = v
 	return v
 }

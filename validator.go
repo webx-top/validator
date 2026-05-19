@@ -18,6 +18,11 @@ func NormalizeLocale(locale string) string {
 }
 
 func New(ctx echo.Context, locales ...string) *Validate {
+	transtation, locale := getTranslationRegister(locales...)
+	return newWithTranslationRegister(ctx, transtation, locale)
+}
+
+func getTranslationRegister(locales ...string) (TranslationRegister, string) {
 	var locale string
 	if len(locales) > 0 {
 		locale = locales[0]
@@ -25,8 +30,6 @@ func New(ctx echo.Context, locales ...string) *Validate {
 	if len(locale) == 0 {
 		locale = DefaultLocale
 	}
-	translator, _ := UniversalTranslator().GetTranslator(locale)
-	validate := validator.New()
 	transtation, ok := Translations[locale]
 	if !ok {
 		args := strings.SplitN(locale, `_`, 2)
@@ -41,10 +44,17 @@ func New(ctx echo.Context, locales ...string) *Validate {
 			}
 		}
 	}
-	if ok {
+	return transtation, locale
+}
+
+func newWithTranslationRegister(ctx echo.Context, transtation TranslationRegister, locale string) *Validate {
+	translator, _ := UniversalTranslator().GetTranslator(locale)
+	validate := validator.New()
+	if transtation != nil {
 		transtation(validate, translator)
 	}
 	v := &Validate{
+		locale:     locale,
 		validator:  validate,
 		translator: translator,
 		context:    ctx,
@@ -54,6 +64,7 @@ func New(ctx echo.Context, locales ...string) *Validate {
 }
 
 type Validate struct {
+	locale     string
 	validator  *validator.Validate
 	translator ut.Translator
 	context    echo.Context
