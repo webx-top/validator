@@ -34,6 +34,11 @@ func New(ctx echo.Context, locales ...string) *Validate {
 			transtation, ok = Translations[args[0]]
 		} else {
 			log.Warnf(`[validator] not found translation: %s`, locale)
+			if locale != DefaultLocale {
+				log.Warnf(`[validator] fallback to default translation: %s`, DefaultLocale)
+				locale = DefaultLocale
+				transtation, ok = Translations[locale]
+			}
 		}
 	}
 	if ok {
